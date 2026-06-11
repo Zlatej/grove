@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/BurntSushi/toml"
 )
@@ -42,7 +41,7 @@ func Load() (*Config, error) {
 }
 
 func createNew(path string) error {
-	strCfg := `# this is default config, adjust it to your needs
+	newCfg := []byte(`# this is default config, adjust it to your needs
 
 # if you require to have the id of a ticket in branch name, uncomment and enter your ID prefix
 # ticket_id_prefix = "TID-" 
@@ -51,12 +50,18 @@ ticket_id_first = true
 base_branch = "main"
 
 # worktrees created after a repository is cloned
-clone_wt = ["main", "review"]
-`
-	dirs, _ := strings.CutSuffix(path, "config.toml")
-	os.MkdirAll(dirs, 0755)
-	os.Create(path)
+clone_wt = ["main", "review"]`)
 
-	fmt.Println("creating new " + path)
-	return os.WriteFile(path, []byte(strCfg), 0755)
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	if _, err = f.Write(newCfg); err != nil {
+		return err
+	}
+	return f.Close()
 }

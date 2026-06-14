@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
 
+	tea "charm.land/bubbletea/v2"
 	"github.com/zlatej/grove/internal/config"
+	"github.com/zlatej/grove/internal/ui"
 )
 
 func main() {
@@ -12,5 +13,8 @@ func main() {
 	if err != nil {
 		slog.Error("loading config", "error", err.Error())
 	}
-	fmt.Println("67")
+	p := tea.NewProgram(ui.NewModel())
+	if _, err := p.Run(); err != nil {
+		slog.Error("running menu model", "error", err)
+	}
 }

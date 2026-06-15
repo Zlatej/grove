@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/zlatej/grove/internal/config"
+	"github.com/zlatej/grove/internal/git"
 )
 
 // Choice contains information about one command
@@ -63,6 +64,14 @@ func runUpdate(cfg *config.Config) error {
 }
 
 func runClone(cfg *config.Config) error {
+	url, err := RepoUrl()
+	if err != nil {
+		return err
+	}
+	err = git.CloneBare(url, "")
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

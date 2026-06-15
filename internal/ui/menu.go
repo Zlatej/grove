@@ -7,17 +7,27 @@ import (
 	tea "charm.land/bubbletea/v2"
 )
 
+const (
+	New    = "new"
+	Delete = "delete"
+	Update = "update"
+	Clone  = "clone"
+	List   = "list"
+)
+
+var choices = []string{New, Delete, Update, Clone, List}
+
 type Model struct {
-	Choices []string
-	Cursor  int
-	Slected string
+	DisplayChoices []string
+	Cursor         int
+	Selected       string
 }
 
 func NewModel() Model {
 	return Model{
-		Choices: []string{"[N]ew", "[D]elete", "[U]pdate ", "[C]lone", "[L]ist"},
-		Cursor:  0,
-		Slected: "",
+		DisplayChoices: []string{"[N]ew", "[D]elete", "[U]pdate", "[C]lone", "[L]ist"},
+		Cursor:         0,
+		Selected:       "",
 	}
 
 }
@@ -31,31 +41,32 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "ctrl+c", "q":
-			m.Slected = ""
+			m.Selected = ""
 			return m, tea.Quit
 		case "up", "k":
 			if m.Cursor > 0 {
 				m.Cursor--
 			}
 		case "down", "j":
-			if m.Cursor < len(m.Choices)-1 {
+			if m.Cursor < len(m.DisplayChoices)-1 {
 				m.Cursor++
 			}
 		case "enter", "space":
-			m.Slected = m.Choices[m.Cursor]
-			return m, tea.Quit
+			m.Selected = choices[m.Cursor]
 		case "n":
-			m.Slected = "new"
+			m.Selected = New
 		case "d":
-			m.Slected = "done"
+			m.Selected = Delete
 		case "u":
-			m.Slected = "update"
+			m.Selected = Update
 		case "c":
-			m.Slected = "clone"
+			m.Selected = Clone
 		case "l":
-			m.Slected = "list"
+			m.Selected = List
 		}
-
+	}
+	if m.Selected != "" {
+		return m, tea.Quit
 	}
 
 	return m, nil
@@ -65,14 +76,14 @@ func (m Model) View() tea.View {
 	var s strings.Builder
 	s.WriteString("Select an action\n\n")
 
-	for i, choice := range m.Choices {
+	for i, choice := range m.DisplayChoices {
 
 		cursor := " "
 		if m.Cursor == i {
 			cursor = ">"
 		}
 
-		fmt.Fprintf(&s, "%s %s\n", cursor, choice)
+		fmt.Fprintf(&s, " %s %s\n", cursor, choice)
 	}
 
 	s.WriteString("\nPress q to quit.\n")

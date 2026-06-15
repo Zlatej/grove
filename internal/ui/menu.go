@@ -15,19 +15,29 @@ const (
 	List   = "list"
 )
 
-var choices = []string{New, Delete, Update, Clone, List}
+type choice struct {
+	display string
+	key     string
+	action  string
+}
+
+var choices = []choice{
+	{"[N]ew", "n", New},
+	{"[D]elete", "d", Delete},
+	{"[U]pdate", "u", Update},
+	{"[C]lone", "c", Clone},
+	{"[L]ist", "l", List},
+}
 
 type Model struct {
-	DisplayChoices []string
-	Cursor         int
-	Selected       string
+	cursor   int
+	Selected string
 }
 
 func NewModel() Model {
 	return Model{
-		DisplayChoices: []string{"[N]ew", "[D]elete", "[U]pdate", "[C]lone", "[L]ist"},
-		Cursor:         0,
-		Selected:       "",
+		cursor:   0,
+		Selected: "",
 	}
 
 }
@@ -37,36 +47,32 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyPressMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
-			m.Selected = ""
-			return m, tea.Quit
-		case "up", "k":
-			if m.Cursor > 0 {
-				m.Cursor--
-			}
-		case "down", "j":
-			if m.Cursor < len(m.DisplayChoices)-1 {
-				m.Cursor++
-			}
-		case "enter", "space":
-			m.Selected = choices[m.Cursor]
-		case "n":
-			m.Selected = New
-		case "d":
-			m.Selected = Delete
-		case "u":
-			m.Selected = Update
-		case "c":
-			m.Selected = Clone
-		case "l":
-			m.Selected = List
-		}
+	key, ok := msg.(tea.KeyPressMsg)
+	if !ok {
+		return m, nil
 	}
-	if m.Selected != "" {
+	switch key.String() {
+	case "ctrl+c", "q":
+		m.Selected = ""
 		return m, tea.Quit
+	case "up", "k":
+		if m.cursor > 0 {
+			m.cursor--
+		}
+	case "down", "j":
+		if m.cursor < len(choices)-1 {
+			m.cursor++
+		}
+	case "enter", "space":
+		m.Selected = choices[m.cursor].action
+		return m, tea.Quit
+	default:
+		for _, c := range choices {
+			if c.key == key.String() {
+				m.Selected = c.action
+				return m, tea.Quit
+			}
+		}
 	}
 
 	return m, nil
@@ -76,14 +82,12 @@ func (m Model) View() tea.View {
 	var s strings.Builder
 	s.WriteString("Select an action\n\n")
 
-	for i, choice := range m.DisplayChoices {
-
+	for i, choice := range choices {
 		cursor := " "
-		if m.Cursor == i {
+		if m.cursor == i {
 			cursor = ">"
 		}
-
-		fmt.Fprintf(&s, " %s %s\n", cursor, choice)
+		fmt.Fprintf(&s, " %s %s\n", cursor, choice.display)
 	}
 
 	s.WriteString("\nPress q to quit.\n")

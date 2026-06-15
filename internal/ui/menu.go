@@ -5,41 +5,20 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/zlatej/grove/internal/commands"
 )
-
-const (
-	New    = "new"
-	Delete = "delete"
-	Update = "update"
-	Clone  = "clone"
-	List   = "list"
-)
-
-type choice struct {
-	display string
-	key     string
-	action  string
-}
-
-var choices = []choice{
-	{"[N]ew", "n", New},
-	{"[D]elete", "d", Delete},
-	{"[U]pdate", "u", Update},
-	{"[C]lone", "c", Clone},
-	{"[L]ist", "l", List},
-}
 
 type Model struct {
 	cursor   int
-	Selected string
+	Selected commands.CommandID
 }
 
+// NewModel returns default Model, kept in case non primitive fields were added
 func NewModel() Model {
 	return Model{
 		cursor:   0,
 		Selected: "",
 	}
-
 }
 
 func (m Model) Init() tea.Cmd {
@@ -60,16 +39,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.cursor--
 		}
 	case "down", "j":
-		if m.cursor < len(choices)-1 {
+		if m.cursor < len(commands.Choices)-1 {
 			m.cursor++
 		}
 	case "enter", "space":
-		m.Selected = choices[m.cursor].action
+		m.Selected = commands.Choices[m.cursor].ID
 		return m, tea.Quit
 	default:
-		for _, c := range choices {
-			if c.key == key.String() {
-				m.Selected = c.action
+		for _, c := range commands.Choices {
+			if c.Key == key.String() {
+				m.Selected = c.ID
 				return m, tea.Quit
 			}
 		}
@@ -82,12 +61,12 @@ func (m Model) View() tea.View {
 	var s strings.Builder
 	s.WriteString("Select an action\n\n")
 
-	for i, choice := range choices {
+	for i, c := range commands.Choices {
 		cursor := " "
 		if m.cursor == i {
 			cursor = ">"
 		}
-		fmt.Fprintf(&s, " %s %s\n", cursor, choice.display)
+		fmt.Fprintf(&s, " %s %s\n", cursor, c.Display)
 	}
 
 	s.WriteString("\nPress q to quit.\n")
